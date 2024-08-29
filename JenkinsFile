@@ -11,7 +11,7 @@ pipeline {
             steps {
                 script {
                     // Build the Docker image from the Dockerfile in the repository
-                    dockerImage = docker.build("2306kaushik/Assignment_9:${env.BUILD_ID}", ".")
+                    dockerImage = docker.build("2306kaushik/assignment_9:${env.BUILD_ID}", ".")
                 }
             }
         }
@@ -38,14 +38,15 @@ pipeline {
     post {
         always {
             script {
-                // Clean up the Docker container after the pipeline run
-                // Use `sh` for Unix-based systems or `bat` for Windows
-                if (isUnix()) {
-                    sh "docker rm -f my_app_container || true"
-                    sh "docker rmi ${dockerImage.id} || true"
-                } else {
-                    bat "docker rm -f my_app_container || true"
-                    bat "docker rmi ${dockerImage.id} || true"
+                // Check if dockerImage is defined
+                if (binding.hasVariable('dockerImage')) {
+                    if (isUnix()) {
+                        sh "docker ps -a | grep my_app_container && docker rm -f my_app_container || true"
+                        sh "docker rmi ${dockerImage.id} || true"
+                    } else {
+                        bat "docker ps -a | findstr my_app_container && docker rm -f my_app_container || true"
+                        bat "docker rmi ${dockerImage.id} || true"
+                    }
                 }
             }
         }
