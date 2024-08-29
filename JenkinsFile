@@ -37,10 +37,16 @@ pipeline {
     }
     post {
         always {
-            // Clean up the Docker container after the pipeline run
             script {
-                sh "docker rm -f my_app_container || true"
-                sh "docker rmi ${dockerImage.id} || true"
+                // Clean up the Docker container after the pipeline run
+                // Use `sh` for Unix-based systems or `bat` for Windows
+                if (isUnix()) {
+                    sh "docker rm -f my_app_container || true"
+                    sh "docker rmi ${dockerImage.id} || true"
+                } else {
+                    bat "docker rm -f my_app_container || true"
+                    bat "docker rmi ${dockerImage.id} || true"
+                }
             }
         }
     }
