@@ -1,0 +1,47 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('Clone Repository') {
+            steps {
+                git branch: 'main', url: 'https://github.com/Kaushik042001/Assignment_9.git'
+            }
+        }
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    // Build the Docker image from the Dockerfile in the repository
+                    dockerImage = docker.build("2306kaushik/Assignment_9:${env.BUILD_ID}", ".")
+                }
+            }
+        }
+        stage('Push Docker Image to Docker Hub') {
+            steps {
+                script {
+                    // Log in to Docker Hub
+                    docker.withRegistry('https://index.docker.io/v1/', 'docker-hub-credentials-id') {
+                        // Push the image to Docker Hub
+                        dockerImage.push("${env.BUILD_ID}")
+                    }
+                }
+            }
+        }
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    // Run the Docker container in daemon mode
+                    dockerImage.run('-d --name my_app_container')
+                }
+            }
+        }
+    }
+    post {
+        always {
+            // Clean up the Docker container after the pipeline run
+            script {
+                sh "docker rm -f my_app_container || true"
+                sh "docker rmi ${dockerImage.id} || true"
+            }
+        }
+    }
+}
